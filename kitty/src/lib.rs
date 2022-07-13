@@ -17,7 +17,7 @@ pub use pallet::*;
 use frame_support::pallet_prelude::*;
 use frame_system::pallet_prelude::*;
 use frame_support::inherent::Vec;
-use frame_support::dispatch::fmt;
+// use frame_support::dispatch::fmt;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -61,7 +61,6 @@ pub mod pallet {
 	// The pallet's runtime storage items.
 	// https://docs.substrate.io/v3/runtime/storage
 	#[pallet::storage]
-	#[pallet::getter(fn something)]
 	// Learn more about declaring storage items:
 	// https://docs.substrate.io/v3/runtime/storage#declaring-storage-items
 	pub type KittyID<T> = StorageValue<_, Id, ValueQuery>;
@@ -158,10 +157,7 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 			
 			let kitty_op = <KittyList<T>>::get(swap_kitty_id);
-			match kitty_op {
-				None => {ensure!(1>1, Error::<T>::NotExistKitty)}, 
-				_ => {}
-			  }
+			ensure!(kitty_op.is_some(), Error::<T>::NotExistKitty);
 			let mut kitty = kitty_op.unwrap();
 
 			// Update storage.
