@@ -118,6 +118,8 @@ pub mod pallet {
 
 			// get Kitty ID
 			let mut current_id = <KittyID<T>>::get();
+			// increa id
+			current_id +=1;
 
 			let kitty = Kittys {
 				id: current_id,
@@ -129,11 +131,8 @@ pub mod pallet {
 
 			// Update storage.
 			
-
 			<KittyList<T>>::insert(current_id, &kitty);
-
-			// increa id
-			current_id +=1;
+			
 			KittyID::<T>::put(current_id);
 
 			// Update Amount of kitty owning
@@ -160,7 +159,7 @@ pub mod pallet {
 			
 			let kitty_op = <KittyList<T>>::get(swap_kitty_id);
 			match kitty_op {
-				None => {ensure!(1==1, Error::<T>::NotExistKitty)}, 
+				None => {ensure!(1>1, Error::<T>::NotExistKitty)}, 
 				_ => {}
 			  }
 			let mut kitty = kitty_op.unwrap();
