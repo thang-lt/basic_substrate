@@ -192,7 +192,7 @@ pub mod pallet {
 				None => Vec::new(),
 				_	 =>	new_owner_kittys_op.unwrap(),
 			};
-			new_owner_kittys_vec.push(&kitty);
+			new_owner_kittys_vec.push(kitty);
 			<KittyOwner<T>>::insert(to_account.clone(), new_owner_kittys_vec);
 
 			// Emit an event.
