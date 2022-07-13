@@ -85,7 +85,7 @@ pub mod pallet {
 		/// Event documentation should end with an array that provides descriptive names for event
 		/// parameters. [something, who]
 		KittyStored(Vec<u8>, T::AccountId),
-		SwapKittyStored(u32, T::AccountId),
+		SwapKittyStored(T::AccountId, u32, T::AccountId),
 	}
 
 	// Errors inform users that something went wrong.
@@ -95,6 +95,8 @@ pub mod pallet {
 		NoneValue,
 		/// Errors should have helpful documentation associated with them.
 		StorageOverflow,
+		/// Error don't exits kitty.
+		NotExistKitty,
 	}
 
 	// Dispatchable functions allows users to interact with the pallet and invoke state changes.
@@ -110,10 +112,10 @@ pub mod pallet {
 			// This function will return an error if the extrinsic is not signed.
 			// https://docs.substrate.io/v3/runtime/origins
 			let who = ensure_signed(origin)?;
-			let mut Kitty_owning = <KittyOwner<T>>::get(who.clone()).unwrap();
 
 			// Check paramater
 			let gender = Self::gen_gender(dna.clone())?;
+
 			// get Kitty ID
 			let mut current_id = <KittyID<T>>::get();
 
@@ -135,8 +137,13 @@ pub mod pallet {
 			KittyID::<T>::put(current_id);
 
 			// Update Amount of kitty owning
-			Kitty_owning.push(kitty);
-			<KittyOwner<T>>::insert(who.clone(), Kitty_owning);
+			let kitty_owning = <KittyOwner<T>>::get(who.clone());
+			let mut kitty_owning_vec = match kitty_owning{
+				None => Vec::new(),
+				_	 =>	<KittyOwner<T>>::get(who.clone()).unwrap(),
+			};
+			kitty_owning_vec.push(kitty);
+			<KittyOwner<T>>::insert(who.clone(), kitty_owning_vec);
 
 			// Emit an event.
 			Self::deposit_event(Event::KittyStored(dna, who));
@@ -145,23 +152,51 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn swap_kitty(origin: OriginFor<T>, id: u32, to_account: T::AccountId) -> DispatchResult {
+		pub fn swap_kitty(origin: OriginFor<T>, swap_kitty_id: u32, to_account: T::AccountId) -> DispatchResult {
 			// Check that the extrinsic was signed and get the signer.
 			// This function will return an error if the extrinsic is not signed.
 			// https://docs.substrate.io/v3/runtime/origins
 			let who = ensure_signed(origin)?;
 			
-			let mut kitty = <KittyList<T>>::get(id);
+			let kitty_op = <KittyList<T>>::get(swap_kitty_id);
+			match kitty_op {
+				None => {ensure!(1==1, Error::<T>::NotExistKitty)}, 
+				_ => {}
+			  }
+			let mut kitty = kitty_op.unwrap();
 
 			// Update storage.
 			
 			// Update Owner Kitty
+			let old_owner = kitty.owner;
+			kitty.owner = to_account.clone();
+			// Update Kitty list
+			<KittyList<T>>::insert(swap_kitty_id, &kitty);
 
 			// Update Kitty_Owner storage
+			// Old Owner
+			let old_owner_kittys_op = <KittyOwner<T>>::get(&old_owner);
+			let mut old_owner_kittys_vec = match old_owner_kittys_op{
+				None => Vec::new(),
+				_	 =>	old_owner_kittys_op.unwrap(),
+			};
+			// remove kitty in list owner
+			if let Some(index) = old_owner_kittys_vec.iter().position(|value| value.id == swap_kitty_id) {
+				old_owner_kittys_vec.swap_remove(index);
+			}
+			<KittyOwner<T>>::insert(old_owner, old_owner_kittys_vec);
 
+			// New Owner
+			let new_owner_kittys_op = <KittyOwner<T>>::get(&to_account);
+			let mut new_owner_kittys_vec = match new_owner_kittys_op{
+				None => Vec::new(),
+				_	 =>	new_owner_kittys_op.unwrap(),
+			};
+			new_owner_kittys_vec.push(&kitty);
+			<KittyOwner<T>>::insert(to_account.clone(), new_owner_kittys_vec);
 
 			// Emit an event.
-			Self::deposit_event(Event::SwapKittyStored(id, to_account));
+			Self::deposit_event(Event::SwapKittyStored(who, swap_kitty_id, to_account));
 			// Return a successful DispatchResultWithPostInfo
 			Ok(())
 		}
