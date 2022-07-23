@@ -204,7 +204,7 @@ impl<T> Pallet<T> {
 	fn gen_gender(dna: Vec<u8>) -> Result<Gender,Error<T>>{
 		let mut res = Gender::Male;
 		if dna.len() % 2 !=0 {
-			res = Gender::Female;
+			res = Gender::Female; 
 		}
 		Ok(res)
 	}
