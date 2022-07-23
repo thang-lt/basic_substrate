@@ -98,3 +98,16 @@ impl<T:Config> Pallet<T>{
 		Ok(())
 	}
 }
+
+pub trait GetMax{
+	fn get_max_value() -> u32;
+
+}
+
+
+impl<T:Config> GetMax for Pallet<T>{
+	fn get_max_value() -> u32{
+		let value = 3u32;
+		value
+	}
+}
