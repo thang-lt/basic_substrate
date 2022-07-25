@@ -18,6 +18,7 @@ use frame_support::pallet_prelude::*;
 use frame_system::pallet_prelude::*;
 
 use pallet_template::DoSome;
+
 #[frame_support::pallet]
 pub mod pallet {
 
@@ -78,7 +79,7 @@ pub mod pallet {
 			// Check that the extrinsic was signed and get the signer.
 			// This function will return an error if the extrinsic is not signed.
 			// https://docs.substrate.io/v3/runtime/origins
-			let who = ensure_signed(origin)?;
+			let _who = ensure_signed(origin)?;
 			//Config::Increase
 			let new_value = T::Increase::increase_value(something);
 

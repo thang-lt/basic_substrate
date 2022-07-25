@@ -126,7 +126,7 @@ pub mod pallet {
 			ensure!(!Kitties::<T>::contains_key(&kitty.dna), Error::<T>::DuplicateKitty);
 
 			// Check MaxValue
-			let mut kittie_vec = KittiesOwned::<T>::get(&owner);
+			let kittie_vec = KittiesOwned::<T>::get(&owner);
 			let count_kittites = kittie_vec.iter().count();
 			let max_value = T::MaxDefault::get_max_value();
 			log::info!("__Max valua: {:?}", max_value);
