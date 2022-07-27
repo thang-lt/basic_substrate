@@ -23,7 +23,7 @@ pub type Id = u32;
 use sp_runtime::ArithmeticError;
 use frame_support::traits::Randomness;
 use frame_support::traits::Currency;
-
+use frame_support::dispatch::fmt;
 use pallet_loosely_coupling::GetMax;
 
 type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
@@ -31,7 +31,7 @@ type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Con
 pub mod pallet {
 
 	pub use super::*;
-	#[derive(Clone, Encode, Decode, PartialEq, RuntimeDebug, TypeInfo)]
+	#[derive(Clone, Encode, Decode, PartialEq, TypeInfo)]
 	#[scale_info(skip_type_params(T))]
 	pub struct Kitty<T: Config> {
 		pub dna: T::Hash,
@@ -40,7 +40,21 @@ pub mod pallet {
 		pub owner: T::AccountId,
 		pub create: <T as pallet_timestamp::Config>::Moment
 	}
-	#[derive(Clone, Encode, Decode, PartialEq, Copy, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+
+	impl<T:Config> fmt::Debug for Kitty<T>{
+		fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+			f.debug_struct("Kitty")
+			 .field("dna", &self.dna)
+			 .field("price", &self.price)
+			 .field("gender", &self.gender)
+			 .field("owner", &self.owner)
+			 .field("create", &self.create)
+			 .finish()
+		}
+	}
+	
+	
+	#[derive(Clone, Encode, Decode, PartialEq, Copy, TypeInfo, MaxEncodedLen, Debug)]
 	pub enum Gender {
 		Male,
 		Female,
@@ -116,11 +130,12 @@ pub mod pallet {
 			// Make sure the caller is from a signed origin
 			let owner = ensure_signed(origin)?;
 			Self::gen_dna();
-			log::info!("total balance:{:?}", T::Currency::total_balance(&owner));
+			log::info!("___total balance:{:?}", T::Currency::total_balance(&owner));
 			let gender = Self::gen_gender(&dna)?;
 			let dna = Self::gen_dna();
 			let now = pallet_timestamp::Pallet::<T>::now();
 			let kitty = Kitty::<T> { dna: dna.clone(), price: 0u32.into(), gender, owner: owner.clone(), create: now };
+			log::info!("___New Kitty:{:?}", kitty);
 
 			// Check if the kitty does not already exist in our storage map
 			ensure!(!Kitties::<T>::contains_key(&kitty.dna), Error::<T>::DuplicateKitty);
@@ -142,7 +157,7 @@ pub mod pallet {
 			// Write new kitty to storage
 			Kitties::<T>::insert(kitty.dna.clone(), kitty);
 			KittyId::<T>::put(next_id);
-
+			
 			// Deposit our "Created" event.
 			Self::deposit_event(Event::GetMaxVallue { max: max_value});
 			Self::deposit_event(Event::Created { kitty: dna, owner: owner.clone() });
